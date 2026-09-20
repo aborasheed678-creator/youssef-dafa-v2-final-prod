@@ -1,10 +1,20 @@
-import { useState, useMemo } from "react";
-import { Home, UserCheck, Shield, Smartphone, Key, Building2, CreditCard, Wallet, Landmark, Truck, FileText, Heart, Activity } from "lucide-react";
-import ServiceCard from "@/components/ServiceCard";
+import { useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  FileText,
+  HeartPulse,
+  Home,
+  Landmark,
+  Scale,
+  ShieldCheck,
+  Stethoscope,
+  Truck,
+} from "lucide-react";
 import { Country, COUNTRIES } from "@/lib/countries";
 import SEOHead from "@/components/SEOHead";
 import BottomNav from "@/components/BottomNav";
-import BackButton from "@/components/BackButton";
 import { serviceLogos } from "@/lib/serviceLogos";
 import {
   Select,
@@ -14,152 +24,263 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const Services = () => {
-  const [selectedCountry, setSelectedCountry] = useState<Country | undefined>(COUNTRIES.find(c => c.code === 'SA'));
+interface CatalogService {
+  id: string;
+  titleAr: string;
+  titleEn: string;
+  description: string;
+  icon: LucideIcon;
+  gradient: string;
+}
 
-  const governmentServices = useMemo(() => {
-    if (!selectedCountry) return [];
-    const code = selectedCountry.code;
-    const services: any[] = [];
+interface CatalogSectionProps {
+  id: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  accentClass: string;
+  services: CatalogService[];
+}
 
-    // Define sovereign services mapping
-    const govMap: Record<string, string[]> = {
-      SA: ['nafath', 'absher', 'tawakkalna', 'etheq', 'etimad', 'sadad'],
-      AE: ['uae-pass', 'edirham', 'jaywan', 'abu-dhabi-pay'],
-      KW: ['hawyti', 'sahel', 'knet'],
-      QA: ['qdi', 'hukoomi'],
-      BH: ['ekey', 'benefit', 'mygov'],
-      OM: ['rop-id', 'theqa', 'omannet']
-    };
+const governmentServicesByCountry: Record<string, string[]> = {
+  SA: ["nafath", "absher", "tawakkalna", "etheq", "etimad", "sadad"],
+  AE: ["uae-pass", "edirham", "jaywan", "abu-dhabi-pay"],
+  KW: ["hawyti", "sahel", "knet"],
+  QA: ["qdi", "hukoomi"],
+  BH: ["ekey", "benefit", "mygov"],
+  OM: ["rop-id", "theqa", "omannet"],
+};
 
-    const keys = govMap[code] || [];
-    keys.forEach(key => {
-      const branding = serviceLogos[key];
-      if (branding) {
-        services.push({
-          title: branding.nameEn,
-          titleAr: branding.nameAr,
-          description: `إنشاء رابط دفع ${branding.nameAr}`,
-          icon: Shield,
-          href: `/create/${code}/payment?service=${key}`,
-          gradient: `linear-gradient(135deg, ${branding.colors.primary}, ${branding.colors.secondary})`,
-          logo: branding.logo
-        });
-      }
-    });
+const shippingServiceKeys = [
+  "aramex",
+  "dhl",
+  "fedex",
+  "ups",
+  "smsa",
+  "naqel",
+  "zajil",
+  "saudipost",
+  "emiratespost",
+];
 
-    return services;
-  }, [selectedCountry]);
+const platformServices: CatalogService[] = [
+  {
+    id: "chalets",
+    titleAr: "الشاليهات والحجوزات",
+    titleEn: "Chalets & bookings",
+    description: "إدارة طلبات الإقامة والحجوزات والضيوف.",
+    icon: Home,
+    gradient: "from-emerald-500 to-teal-700",
+  },
+  {
+    id: "invoices",
+    titleAr: "الفواتير",
+    titleEn: "Invoices",
+    description: "إنشاء الفواتير وعرضها وإدارة بيانات العميل.",
+    icon: FileText,
+    gradient: "from-blue-500 to-indigo-700",
+  },
+  {
+    id: "health",
+    titleAr: "الخدمات الصحية",
+    titleEn: "Health services",
+    description: "دليل خدمات المواعيد والاستشارات والرعاية الصحية.",
+    icon: Stethoscope,
+    gradient: "from-rose-500 to-pink-700",
+  },
+  {
+    id: "logistics",
+    titleAr: "الشحن واللوجستيات",
+    titleEn: "Logistics",
+    description: "خدمات الشحن والتسليم وتتبع الطلبات.",
+    icon: Truck,
+    gradient: "from-amber-500 to-orange-700",
+  },
+  {
+    id: "contracts",
+    titleAr: "العقود الإلكترونية",
+    titleEn: "Electronic contracts",
+    description: "إدارة قوالب العقود والوثائق والاتفاقيات.",
+    icon: Scale,
+    gradient: "from-violet-500 to-purple-700",
+  },
+];
 
-  const shippingServices = useMemo(() => {
-    if (!selectedCountry) return [];
-    const services: any[] = [];
-    ['aramex', 'dhl', 'fedex', 'ups', 'smsa', 'naqel', 'zajil', 'saudipost', 'emiratespost'].forEach(key => {
-       const branding = serviceLogos[key];
-       if (branding) {
-          services.push({
-            title: branding.nameEn,
-            titleAr: branding.nameAr,
-            description: `بوابة دفع ${branding.nameAr} الرسمية`,
-            icon: Truck,
-            href: `/create/${selectedCountry.code}/shipping?service=${key}`,
-            gradient: `linear-gradient(135deg, ${branding.colors.primary}, ${branding.colors.secondary})`,
-            logo: branding.logo
-          });
-       }
-    });
-    return services;
-  }, [selectedCountry]);
+const ServiceCard = ({ service }: { service: CatalogService }) => {
+  const Icon = service.icon;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32 font-['Cairo']" dir="rtl">
-      <SEOHead 
-        title="بوابة الدفع الموحدة - الخدمات السيادية" 
-        description="توليد روابط الدفع الموثقة للخدمات الحكومية وخدمات الشحن"
+    <article
+      className="group h-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+      aria-label={`${service.titleAr} — ${service.description}`}
+    >
+      <div className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${service.gradient} shadow-sm`}>
+        <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+      </div>
+      <h3 className="text-base font-black text-slate-900">{service.titleAr}</h3>
+      <p className="mt-1 text-xs font-semibold text-slate-400" dir="ltr">
+        {service.titleEn}
+      </p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{service.description}</p>
+    </article>
+  );
+};
+
+const CatalogSection = ({ id, title, description, icon: Icon, accentClass, services }: CatalogSectionProps) => (
+  <section id={id} className="scroll-mt-6 space-y-5" aria-labelledby={`section-${id}`}>
+    <div className="flex items-start gap-3 px-1">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${accentClass}`}>
+        <Icon className="h-5 w-5 text-white" aria-hidden="true" />
+      </div>
+      <div>
+        <h2 id={`section-${id}`} className="text-lg font-black text-slate-900">
+          {title}
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">{description}</p>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+      {services.map((service) => (
+        <div key={service.id} role="listitem">
+          <ServiceCard service={service} />
+        </div>
+      ))}
+    </div>
+  </section>
+);
+
+const Services = () => {
+  const [selectedCountry, setSelectedCountry] = useState<Country>(
+    () => COUNTRIES.find((country) => country.code === "SA") ?? COUNTRIES[0],
+  );
+
+  const governmentServices = useMemo<CatalogService[]>(() => {
+    return (governmentServicesByCountry[selectedCountry.code] ?? []).flatMap((key) => {
+      const branding = serviceLogos[key];
+      if (!branding) return [];
+
+      return [{
+        id: key,
+        titleAr: branding.nameAr ?? key,
+        titleEn: branding.nameEn ?? key,
+        description: "خدمة رقمية مدرجة ضمن دليل الخدمات لهذه الدولة.",
+        icon: Landmark,
+        gradient: "from-slate-800 to-slate-950",
+      }];
+    });
+  }, [selectedCountry.code]);
+
+  const shippingServices = useMemo<CatalogService[]>(() => {
+    return shippingServiceKeys.flatMap((key) => {
+      const branding = serviceLogos[key];
+      if (!branding) return [];
+
+      return [{
+        id: key,
+        titleAr: branding.nameAr ?? key,
+        titleEn: branding.nameEn ?? key,
+        description: "خدمة شحن أو لوجستيات مدرجة ضمن دليل المنصة.",
+        icon: Truck,
+        gradient: "from-orange-500 to-amber-600",
+      }];
+    });
+  }, []);
+
+  const totalServices = governmentServices.length + shippingServices.length + platformServices.length;
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-32 font-['Cairo']" dir="rtl">
+      <SEOHead
+        title="دليل الخدمات"
+        description="كتالوج منظم للخدمات الرقمية واللوجستية وخدمات المنصة."
       />
-      
-      <div className="bg-[#0A1628] text-white pt-10 pb-20 px-6 rounded-b-[2.5rem] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-[#EB7625]/10 rounded-full -ml-24 -mb-24 blur-3xl"></div>
-        
-        <div className="container mx-auto max-w-4xl relative z-10">
-          <div className="flex items-center justify-between mb-8">
+
+      <header className="relative overflow-hidden bg-slate-950 px-6 pb-20 pt-10 text-white">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-orange-400/10 blur-3xl" />
+
+        <div className="container relative mx-auto max-w-6xl">
+          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <Shield className="w-6 h-6 text-[#EB7625]" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/15 bg-white/10">
+                <ShieldCheck className="h-6 w-6 text-cyan-200" aria-hidden="true" />
               </div>
-              <h1 className="text-xl font-black tracking-tight">بوابة الدفع السيادية</h1>
+              <div>
+                <p className="text-sm font-bold text-white/55">دليل المنصة</p>
+                <h1 className="text-2xl font-black">جميع فئات الخدمات</h1>
+              </div>
             </div>
-            
-            <Select
-              value={selectedCountry?.code}
-              onValueChange={(value) => setSelectedCountry(COUNTRIES.find((c) => c.code === value))}
-            >
-              <SelectTrigger className="w-[140px] bg-white/10 border-white/20 text-white rounded-xl h-10 font-bold backdrop-blur-md">
+
+            <Select value={selectedCountry.code} onValueChange={(code) => {
+              const country = COUNTRIES.find((item) => item.code === code);
+              if (country) setSelectedCountry(country);
+            }}>
+              <SelectTrigger className="w-full border-white/20 bg-white/10 text-white sm:w-[210px]">
                 <SelectValue placeholder="اختر الدولة" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl border-gray-100 font-bold">
+              <SelectContent className="font-bold">
                 {COUNTRIES.map((country) => (
                   <SelectItem key={country.code} value={country.code}>
-                    <div className="flex items-center gap-2">
-                      <span>{country.flag}</span>
-                      <span>{country.nameAr}</span>
-                    </div>
+                    <span className="ml-2" aria-hidden="true">{country.flag}</span>
+                    {country.nameAr}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <h2 className="text-3xl font-black leading-tight">اختر الخدمة المطلوبة</h2>
-            <p className="text-white/60 font-bold text-sm">قم بتوليد رابط دفع موثق وآمن بنظام التشفير السيادي</p>
+          <div className="mt-10 max-w-2xl">
+            <h2 className="text-3xl font-black leading-tight">خدمات منظمة في مكان واحد</h2>
+            <p className="mt-3 text-sm font-semibold leading-7 text-white/65">
+              يعرض هذا الدليل الخدمات الرقمية والخدمات التشغيلية المتاحة في واجهة المنصة حسب الدولة المختارة.
+            </p>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto max-w-4xl px-6 -mt-10 relative z-20">
-        <div className="space-y-12">
-          {/* Government Section */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#0A1628] flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-lg font-black text-[#0A1628]">الخدمات السيادية والحكومية</h3>
-              </div>
-              <div className="h-[2px] flex-1 bg-gray-200/50 mx-4 rounded-full"></div>
-              <span className="text-[10px] font-black text-gray-400 bg-white px-3 py-1 rounded-full border border-gray-100 shadow-sm">OFFICIAL</span>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {governmentServices.map((service, index) => (
-                <ServiceCard key={index} {...service} />
-              ))}
-            </div>
-          </section>
-
-          {/* Shipping Section */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#EB7625] flex items-center justify-center">
-                  <Truck className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-lg font-black text-[#0A1628]">خدمات الشحن واللوجستيات</h3>
-              </div>
-              <div className="h-[2px] flex-1 bg-gray-200/50 mx-4 rounded-full"></div>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {shippingServices.map((service, index) => (
-                <ServiceCard key={index} {...service} />
-              ))}
-            </div>
-          </section>
+      <main className="container relative z-10 mx-auto max-w-6xl px-6">
+        <div className="-mt-8 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <Building2 className="h-5 w-5 text-slate-700" aria-hidden="true" />
+          <span className="text-sm font-black text-slate-900">{selectedCountry.nameAr}</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+            {totalServices} خدمة معروضة
+          </span>
+          <span className="mr-auto flex items-center gap-1 text-xs font-semibold text-slate-500">
+            <CalendarDays className="h-4 w-4" aria-hidden="true" />
+            دليل معلوماتي للخدمات
+          </span>
         </div>
-      </div>
+
+        <div className="space-y-12 py-10">
+          <CatalogSection
+            id="digital-services"
+            title="الخدمات الرقمية والحكومية"
+            description="خدمات رقمية مرتبطة بالدولة المختارة."
+            icon={Landmark}
+            accentClass="bg-slate-900"
+            services={governmentServices}
+          />
+
+          <CatalogSection
+            id="shipping-services"
+            title="شركاء الشحن والتسليم"
+            description="خدمات شحن ولوجستيات مدرجة في واجهة المنصة."
+            icon={Truck}
+            accentClass="bg-orange-500"
+            services={shippingServices}
+          />
+
+          <CatalogSection
+            id="platform-services"
+            title="خدمات المنصة"
+            description="الخدمات التي كانت غير ظاهرة في صفحة الدليل الرئيسية."
+            icon={HeartPulse}
+            accentClass="bg-cyan-600"
+            services={platformServices}
+          />
+        </div>
+      </main>
 
       <BottomNav />
     </div>

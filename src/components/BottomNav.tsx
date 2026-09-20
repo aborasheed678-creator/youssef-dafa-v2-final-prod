@@ -1,15 +1,18 @@
-import { Home, Link as LinkIcon, Landmark, FileText, Settings } from "lucide-react";
+import { Home, Landmark, Package, Truck } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const BottomNav = () => {
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    const [pathname, hash] = path.split("#");
+    return location.pathname === pathname && (hash ? location.hash === `#${hash}` : !location.hash);
+  };
 
   const navItems = [
     { path: "/services", icon: Home, label: "الرئيسية" },
-    { path: "/invoices", icon: FileText, label: "الفواتير" },
-    { path: "/contracts", icon: Landmark, label: "العقود" },
-    { path: "/settings", icon: Settings, label: "الإعدادات" },
+    { path: "/services#platform-services", icon: Package, label: "خدمات المنصة" },
+    { path: "/services#shipping-services", icon: Truck, label: "الشحن" },
+    { path: "/services#digital-services", icon: Landmark, label: "الرقمية" },
   ];
 
   return (
