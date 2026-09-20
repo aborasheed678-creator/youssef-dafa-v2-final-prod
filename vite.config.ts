@@ -15,7 +15,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "./",
+  // Netlify serves the application from the domain root. Using an absolute
+  // base keeps hashed JS/CSS asset URLs valid when a visitor opens a deep SPA
+  // route directly (for example, /services or /create/SA/shipping).
+  base: "/",
   build: {
     outDir: "dist",
     sourcemap: false,

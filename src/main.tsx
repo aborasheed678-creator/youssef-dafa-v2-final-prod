@@ -7,7 +7,9 @@ import { initializeMockChalets } from "./lib/mockChalets";
 // Register service worker for PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    // Resolve the worker from Vite's public base rather than the active route.
+    // A relative URL would request e.g. /services/sw.js on a deep SPA link.
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`)
       .then((registration) => {
         if (import.meta.env.DEV) {
           console.log('SW registered:', registration);
