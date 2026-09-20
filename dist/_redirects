@@ -1,1 +1,3 @@
-/*    /index.html   200
+# SPA fallback: keep this rule last so Netlify can serve static files first.
+# Preserve the requested URL and hand client-side routes to the Vite entry point.
+/*  /index.html  200
